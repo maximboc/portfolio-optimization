@@ -1,0 +1,10 @@
+yfinance
+pandas
+numpy
+scipy
+fredapi
+matplotlib
+streamlit
+streamlit-extras
+yahooquery
+plotly
