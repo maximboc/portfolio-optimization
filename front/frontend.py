@@ -1,10 +1,10 @@
 import streamlit as st
 import pandas as pd
 import datetime
+
+from utils.finance_utils import create_bounds, get_portfolio_return
 from .model_selector import select_model
 from utils.frontend_utils import (
-    create_bounds,
-    get_portfolio_return,
     plot_returns,
     search_stocks,
     models_dict,
@@ -149,7 +149,7 @@ def display_stocks(num_assets: int):
         tickers=st.session_state.selected_tickers,
         allocations=allocations,
         min_weights=min_weights,
-        max_weights=max_weights
+        max_weights=max_weights,
     )
 
     return tickers, allocations, start_date, end_date, min_weights, max_weights
@@ -180,7 +180,7 @@ def init_display(num_assets: int, model: str):
                         model, final_tickers, start_date, end_date, bounds
                     )
 
-                    opti_return, opti_returns_time  = get_portfolio_return(
+                    opti_return, opti_returns_time = get_portfolio_return(
                         final_tickers, opti_weights, start_date, end_date
                     )
 
