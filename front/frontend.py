@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import datetime
 
-from utils.finance_utils import create_bounds, get_portfolio_return
+from utils.finance_utils import create_bounds, get_maximum_risk, get_portfolio_return, get_risk_free_rate
 from .model_selector import select_model
 from utils.frontend_utils import (
     plot_returns,
@@ -162,6 +162,18 @@ def init_display(num_assets: int, model: str):
     )
 
     model = models_dict[model]
+    
+    risk_free_rate = get_risk_free_rate()
+    cur_tickers = [t for t in tickers if t]
+
+    max_risk = get_maximum_risk(cur_tickers, start_date, end_date)
+
+    cur_risk = st.sidebar.number_input("Choose risk rate", min_value=risk_free_rate, max_value=max_risk, value=risk_free_rate, step=0.1)
+
+    st.sidebar.write(
+        f"For your portfolio, the minimum risk is **{risk_free_rate:.2%} and the maximum risk is **{max_risk:.2%}**."
+    )
+    
     if st.sidebar.button("Calculate Return"):
         final_tickers = [t for t in tickers if t]
         final_allocations = [allocations[i] for i, t in enumerate(tickers) if t]
@@ -177,7 +189,7 @@ def init_display(num_assets: int, model: str):
                 with st.spinner("Calculating portfolio returns..."):
                     bounds = create_bounds(min_weights, max_weights)
                     opti_weights = select_model(
-                        model, final_tickers, start_date, end_date, bounds
+                        model, final_tickers, start_date, end_date, bounds, cur_risk
                     )
 
                     opti_return, opti_returns_time = get_portfolio_return(

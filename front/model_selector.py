@@ -7,18 +7,18 @@ def select_model(
     start_date: datetime,
     end_date: datetime,
     bounds : list,
+    risk : int
 ):
-
     match model:
         case "SLSQP":
-            return slsqp(tickers, start_date, end_date, bounds)
+            return slsqp(tickers, start_date, end_date, bounds, risk)
         # TODO
         case "GA":
-            return slsqp(tickers, start_date, end_date, bounds)
+            return slsqp(tickers, start_date, end_date, bounds, risk)
         case "CP_SAT":
-            return slsqp(tickers, start_date, end_date, bounds)
+            return slsqp(tickers, start_date, end_date, bounds, risk)
         case "MINLP":
-            return slsqp(tickers, start_date, end_date, bounds)
+            return slsqp(tickers, start_date, end_date, bounds, risk)
         case _:
             print(f"ERROR - model {model} should not exists")
             return []

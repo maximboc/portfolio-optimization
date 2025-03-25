@@ -2,7 +2,7 @@ from yahooquery import search
 import streamlit as st
 import yfinance as yf
 import matplotlib.pyplot as plt
-
+import pandas as pd
 
 models_dict = {
     "Markowitz - SLSQP (Sequential Least Squares Quadratic Programming)": "SLSQP",
@@ -29,17 +29,11 @@ def search_stocks(query):
 
 
 def plot_returns(opti, og):
-    fig, ax = plt.subplots(figsize=(10, 5))
+    df = pd.DataFrame({
+        "Optimized Portfolio": opti * 100,
+        "Original Portfolio": og * 100
+    }, index=opti.index)
     
-    ax.plot(opti.index, opti * 100, label="Optimized Portfolio", color="blue")
+    df.index.name = "Date"
     
-    ax.plot(og.index, og * 100, label="Original Portfolio", color="red")
-    
-    ax.set_xlabel("Date")
-    ax.set_ylabel("Cumulative Return (%)")
-    ax.set_title("Portfolio Cumulative Returns Over Time")
-    ax.legend()
-    ax.grid()
-    
-    # Show plot in Streamlit
-    st.pyplot(fig)
+    st.line_chart(df, use_container_width=True)

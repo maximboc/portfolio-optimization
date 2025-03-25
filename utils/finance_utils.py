@@ -1,7 +1,7 @@
 import yfinance as yf
 import pandas as pd
 from fredapi import Fred
-
+import numpy as np
 from utils.frontend_utils import search_stocks
 
 
@@ -19,6 +19,19 @@ def get_adj_close_from_stocks(stocks, start_date, end_date):
     
     return adj_close_df
 
+def get_maximum_risk(stocks, start_date, end_date):
+    if (stocks != []):   
+        adj_close_df = get_adj_close_from_stocks(stocks, start_date, end_date)
+        log_returns = np.log(adj_close_df / adj_close_df.shift(1)).dropna()
+
+        cov_matrix = log_returns.cov() * 250.8875
+
+        stock_volatilities = np.sqrt(np.diag(cov_matrix))  
+        max_risk = max(stock_volatilities)
+
+        return max_risk
+    return get_risk_free_rate()
+
 
 def get_risk_free_rate():
     """
@@ -28,6 +41,7 @@ def get_risk_free_rate():
     fred = Fred(api_key="e9048dc2c26dae67bc75a443cd644ce3")
     ten_year_treasury_rate = fred.get_series_latest_release('GS10') / 100
     risk_free_rate = ten_year_treasury_rate.iloc[-1]
+    
     return risk_free_rate
 
 def create_bounds(min_weights : list, max_weights : list):
@@ -49,7 +63,7 @@ def get_portfolio_return(tickers, weights, start_date, end_date):
         - Dataframe with cumulative returns for each period
     """
     tickers = [
-        search_stocks(ticker.strip()) if not ticker.isalpha() else ticker
+        search_stocks(ticker.strip())[0]['symbol'] if not ticker.isalpha() else ticker
         for ticker in tickers
     ]
     data = yf.download(tickers, start=start_date, end=end_date, auto_adjust=False)[
