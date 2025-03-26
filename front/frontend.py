@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import datetime
 
-from utils.finance_utils import create_bounds, get_maximum_risk, get_portfolio_return, get_risk_free_rate
+from utils.finance_utils import create_bounds, get_adj_close_from_stocks, get_maximum_risk, get_portfolio_return, get_risk_free_rate
 from .model_selector import select_model
 from utils.frontend_utils import (
     plot_returns,
@@ -141,8 +141,11 @@ def display_stocks(num_assets: int):
             f"Current allocation: {total_allocation:.1f}%. Allocations should sum to 100%."
         )
 
-    start_date = st.sidebar.date_input("Start Date", datetime.date(2023, 1, 1))
-    end_date = st.sidebar.date_input("End Date", datetime.date(2024, 1, 1))
+    today = datetime.date.today()
+    start_date = st.sidebar.date_input("Start Date", datetime.date(2023, 1, 1), max_value=today)
+    end_date = st.sidebar.date_input("End Date", datetime.date(2024, 1, 1), max_value=today)
+    if (start_date > end_date):
+        st.sidebar.warning("Start date should be before End Date.")
 
     print_portfolio(
         name="Portfolio Summary",
@@ -168,10 +171,11 @@ def init_display(num_assets: int, model: str):
 
     max_risk = get_maximum_risk(cur_tickers, start_date, end_date)
 
-    cur_risk = st.sidebar.number_input("Choose risk rate", min_value=risk_free_rate, max_value=max_risk, value=risk_free_rate, step=0.1)
+    cur_risk = st.sidebar.number_input("Choose risk rate", min_value=risk_free_rate * 100, max_value=max_risk * 100, value=risk_free_rate * 100, step=0.1)
+    cur_risk /= 100
 
     st.sidebar.write(
-        f"For your portfolio, the minimum risk is **{risk_free_rate:.2%} and the maximum risk is **{max_risk:.2%}**."
+        f"For your portfolio, the minimum risk is {risk_free_rate:.2%} and the maximum risk is {max_risk:.2%}."
     )
     
     if st.sidebar.button("Calculate Return"):
@@ -180,10 +184,15 @@ def init_display(num_assets: int, model: str):
 
         if not final_tickers:
             st.error("Please select at least one stock.")
-
+            if start_date > end_date:
+                st.error("Start date should be before End Date.")
+                
         elif abs(sum(final_allocations) - 1.0) > 0.01:
             st.error("Allocations must sum to 100%.")
-
+            if start_date > end_date:
+                st.error("Start date should be before End Date.")
+        elif start_date > end_date:
+            st.error("Start date should be before End Date.")
         else:
             try:
                 with st.spinner("Calculating portfolio returns..."):
@@ -205,10 +214,29 @@ def init_display(num_assets: int, model: str):
                         allocations=opti_weights,
                         bounds=bounds,
                     )
+                    
+                    
+                    
                     plot_returns(opti_returns_time, og_returns_time)
                     st.success(
                         f"Your return : {og_return:.2f}% \n Optimized Portfolio return : {opti_return:.2f}%"
                     )
 
+                    st.subheader("📈 Individual Stock Returns Over the Selected Period")
+
+                    stock_prices = get_adj_close_from_stocks(final_tickers, start_date, end_date)
+
+                    stock_returns = (stock_prices.iloc[-1] / stock_prices.iloc[0] - 1) * 100
+
+                    st.dataframe(stock_returns.to_frame(name="Return (%)"))
+
+                    st.line_chart(stock_prices / stock_prices.iloc[0] * 100, use_container_width=True)
+
+                    
             except Exception as e:
                 st.error(f"Error calculating returns: {e}")
+    st.sidebar.markdown(
+        "**⚠️ Past performances<br>cannot predict the future.**", 
+        unsafe_allow_html=True
+    )
+
