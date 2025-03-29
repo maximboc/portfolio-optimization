@@ -8,3 +8,5 @@ streamlit
 streamlit-extras
 yahooquery
 plotly
+python-dotenv
+langchain_huggingface
