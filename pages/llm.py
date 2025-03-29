@@ -3,6 +3,7 @@ from langchain_huggingface import HuggingFaceEndpoint
 import streamlit as st
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+import datetime
 
 from dotenv import load_dotenv
 
@@ -13,6 +14,34 @@ load_dotenv()
 # model_id="mistralai/Mistral-7B-Instruct-v0.3"
 model_id = "mistralai/Mixtral-8x7B-Instruct-v0.1"
 
+
+# Ensure we don't reset existing session state variables
+# that might have been set in the main page
+if 'num_assets' not in st.session_state:
+    st.session_state.num_assets = 5
+
+if 'model' not in st.session_state:
+    st.session_state.model = "Markowitz - SLSQP (Sequential Least Squares Quadratic Programming)"
+
+# Initialize session state for portfolio values if they don't exist
+if 'allocations' not in st.session_state:
+    st.session_state.allocations = [0.0] * st.session_state.num_assets
+
+if 'min_weights' not in st.session_state:
+    st.session_state.min_weights = [0.0] * st.session_state.num_assets
+
+if 'max_weights' not in st.session_state:
+    st.session_state.max_weights = [0.0] * st.session_state.num_assets
+
+if 'cur_risk' not in st.session_state:
+    st.session_state.cur_risk = 0.0
+
+if 'start_date' not in st.session_state:
+    st.session_state.start_date = datetime.date(2023, 1, 1)
+
+if 'end_date' not in st.session_state:
+    st.session_state.end_date = datetime.date(2024, 1, 1)
+
 st.markdown(
     """
     <style>
@@ -22,15 +51,16 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# Rest of the file remains unchanged
 def get_llm_hf_inference(model_id=model_id, max_new_tokens=128, temperature=0.1):
     """
     Returns a language model for HuggingFace inference.
-
+    
     Parameters:
     - model_id (str): The ID of the HuggingFace model repository.
     - max_new_tokens (int): The maximum number of new tokens to generate.
     - temperature (float): The temperature for sampling from the model.
-
+    
     Returns:
     - llm (HuggingFaceEndpoint): The language model for HuggingFace inference.
     """

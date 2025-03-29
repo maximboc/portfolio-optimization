@@ -36,11 +36,19 @@ def print_portfolio(
 
 
 def display_stocks(num_assets: int):
-    # Initialize session state for storing selected tickers and their details
+    # Initialize session state for selected tickers
     if "selected_tickers" not in st.session_state:
         st.session_state.selected_tickers = [
             {"symbol": "", "name": ""} for _ in range(num_assets)
         ]
+    
+    # Initialize session state for allocations, min_weights, and max_weights
+    if "allocations" not in st.session_state:
+        st.session_state.allocations = [0.0] * num_assets
+    if "min_weights" not in st.session_state:
+        st.session_state.min_weights = [0.0] * num_assets
+    if "max_weights" not in st.session_state:
+        st.session_state.max_weights = [0.0] * num_assets
 
     # Adjust the number of selected tickers if num_assets changes
     if len(st.session_state.selected_tickers) != num_assets:
@@ -57,6 +65,29 @@ def display_stocks(num_assets: int):
             st.session_state.selected_tickers = st.session_state.selected_tickers[
                 :num_assets
             ]
+            
+    # Adjust allocation arrays if num_assets changes
+    if len(st.session_state.allocations) != num_assets:
+        if len(st.session_state.allocations) < num_assets:
+            # Add more zeros
+            st.session_state.allocations.extend([0.0] * (num_assets - len(st.session_state.allocations)))
+        else:
+            # Trim excess 
+            st.session_state.allocations = st.session_state.allocations[:num_assets]
+            
+    # Adjust min weights arrays if num_assets changes
+    if len(st.session_state.min_weights) != num_assets:
+        if len(st.session_state.min_weights) < num_assets:
+            st.session_state.min_weights.extend([0.0] * (num_assets - len(st.session_state.min_weights)))
+        else:
+            st.session_state.min_weights = st.session_state.min_weights[:num_assets]
+            
+    # Adjust max weights arrays if num_assets changes
+    if len(st.session_state.max_weights) != num_assets:
+        if len(st.session_state.max_weights) < num_assets:
+            st.session_state.max_weights.extend([0.0] * (num_assets - len(st.session_state.max_weights)))
+        else:
+            st.session_state.max_weights = st.session_state.max_weights[:num_assets]
 
     tickers = []
     allocations = []
@@ -107,28 +138,36 @@ def display_stocks(num_assets: int):
         else:
             tickers.append("")
 
-        # Allocation inputs
+        # Allocation inputs with session state persistence
         allocation = col2.number_input(
             f"Allocation {i+1} (%)",
             min_value=0.0,
             max_value=100.0,
             step=5.0,
+            value=st.session_state.allocations[i] * 100,
             key=f"alloc_{i}",
         )
+        st.session_state.allocations[i] = allocation / 100
+        
         min_weight = col3.number_input(
             f"Min Weight {i+1} (%)",
             min_value=0.0,
             max_value=100.0,
             step=5.0,
+            value=st.session_state.min_weights[i] * 100,
             key=f"min_{i}",
         )
+        st.session_state.min_weights[i] = min_weight / 100
+        
         max_weight = col4.number_input(
             f"Max Weight {i+1} (%)",
             min_value=0.0,
             max_value=100.0,
             step=5.0,
+            value=st.session_state.max_weights[i] * 100,
             key=f"max_{i}",
         )
+        st.session_state.max_weights[i] = max_weight / 100
 
         allocations.append(allocation / 100)
         min_weights.append(min_weight / 100)
@@ -142,8 +181,27 @@ def display_stocks(num_assets: int):
         )
 
     today = datetime.date.today()
-    start_date = st.sidebar.date_input("Start Date", datetime.date(2023, 1, 1), max_value=today)
-    end_date = st.sidebar.date_input("End Date", datetime.date(2024, 1, 1), max_value=today)
+    
+    # Initialize dates in session state if not present
+    if "start_date" not in st.session_state:
+        st.session_state.start_date = datetime.date(2023, 1, 1)
+    if "end_date" not in st.session_state:
+        st.session_state.end_date = datetime.date(2024, 1, 1)
+    
+    start_date = st.sidebar.date_input(
+        "Start Date", 
+        st.session_state.start_date, 
+        max_value=today
+    )
+    st.session_state.start_date = start_date
+    
+    end_date = st.sidebar.date_input(
+        "End Date", 
+        st.session_state.end_date, 
+        max_value=today
+    )
+    st.session_state.end_date = end_date
+    
     if (start_date > end_date):
         st.sidebar.warning("Start date should be before End Date.")
 
@@ -170,8 +228,20 @@ def init_display(num_assets: int, model: str):
     cur_tickers = [t for t in tickers if t]
 
     max_risk = get_maximum_risk(cur_tickers, start_date, end_date)
-
-    cur_risk = st.sidebar.number_input("Choose risk rate", min_value=risk_free_rate * 100, max_value=max_risk * 100, value=risk_free_rate * 100, step=0.1)
+    
+    # Initialize cur_risk in session state if not present
+    if "cur_risk" not in st.session_state:
+        st.session_state.cur_risk = risk_free_rate * 100
+    
+    cur_risk = st.sidebar.number_input(
+        "Choose risk rate", 
+        min_value=risk_free_rate * 100, 
+        max_value=max_risk * 100, 
+        value=st.session_state.cur_risk, 
+        step=0.1
+    )
+    # Save to session state
+    st.session_state.cur_risk = cur_risk
     cur_risk /= 100
 
     st.sidebar.write(
@@ -239,4 +309,3 @@ def init_display(num_assets: int, model: str):
         "**⚠️ Past performances<br>cannot predict the future.**", 
         unsafe_allow_html=True
     )
-

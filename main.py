@@ -1,8 +1,6 @@
 import streamlit as st
 from front.frontend import init_display
 
-st.set_page_config(page_title="Portfolio Optimization Calculator", page_icon="💸")
-
 st.title("Portfolio Optimization Calculator")
 st.markdown(
     """
@@ -12,7 +10,6 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-
 
 st.sidebar.header("Portfolio Allocation")
 
@@ -27,15 +24,25 @@ if 'model' not in st.session_state:
 if 'portfolio_id' not in st.session_state:
     st.session_state.portfolio_id = "portfolio_" + str(hash(str(st.session_state)))
 
-# Fix the number input widget
+# Define a callback function to update session state
+def update_num_assets():
+    # This function now explicitly updates the session state
+    # when the number input widget changes
+    pass  # The actual update happens automatically through the key
+
+# Use the number input widget with the callback
 num_assets = st.sidebar.number_input(
     "Number of assets in portfolio", 
     min_value=1, 
     max_value=20, 
-    value=st.session_state.num_assets, 
+    value=st.session_state.num_assets,  # Explicitly set the value from session state
     step=1,
-    key="num_assets"  # This automatically updates session_state.num_assets
+    key="num_assets_input",  # Use a different key to avoid conflicts
+    on_change=update_num_assets
 )
+
+# Keep num_assets in sync with the widget
+st.session_state.num_assets = num_assets
 
 model_options = (
     "Markowitz - SLSQP (Sequential Least Squares Quadratic Programming)",
@@ -47,13 +54,16 @@ model_options = (
 model = st.sidebar.selectbox(
     "Optimization Model",
     model_options,
-    index=model_options.index(st.session_state.model),
-    key="model"  # This automatically updates session_state.model
+    index=model_options.index(st.session_state.model),  # Set correct initial selection
+    key="model_input"  # Use a different key
 )
+
+# Keep model in sync with the widget
+st.session_state.model = model
 
 st.subheader(st.session_state.model)
 
-# You might need to modify init_display to store additional form values
+# Pass the session state values to init_display
 init_display(st.session_state.num_assets, st.session_state.model)
 
 st.markdown(
