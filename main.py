@@ -1,6 +1,8 @@
 import streamlit as st
 from front.frontend import init_display
 
+st.set_page_config(page_title="Portfolio Optimization Calculator", page_icon="💸")
+
 st.title("Portfolio Optimization Calculator")
 st.markdown(
     """
@@ -71,6 +73,6 @@ st.markdown(
 # Create a container with the fixed position
 with st.container():
     st.markdown('<div class="chat-button-container">', unsafe_allow_html=True)
-    if st.button("🤖 Chat with AI"):
+    if st.sidebar.button("🤖 Chat with AI"):
         st.switch_page("pages/llm.py")
     st.markdown("</div>", unsafe_allow_html=True)

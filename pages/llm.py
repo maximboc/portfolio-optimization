@@ -6,7 +6,7 @@ from langchain_core.output_parsers import StrOutputParser
 
 from dotenv import load_dotenv
 
-st.set_page_config(page_title="HuggingFace ChatBot", page_icon="🤗")
+st.set_page_config(page_title="Aziz - The Financial ChatBro", page_icon="💸")
 
 # Load environment variables
 load_dotenv()
@@ -184,5 +184,5 @@ with output_container:
                 st.markdown(response)
 
 # Button to go back to the main page
-if st.button("⬅️ Go Back to Main"):
+if st.sidebar.button("⬅️ Go Back to Main"):
     st.switch_page("main.py")
