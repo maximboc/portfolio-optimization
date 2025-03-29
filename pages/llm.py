@@ -62,7 +62,7 @@ if "max_response_length" not in st.session_state:
     st.session_state.max_response_length = 2560
 
 if "system_message" not in st.session_state:
-    st.session_state.system_message = "friendly AI conversing with a human user"
+    st.session_state.system_message = "Aziz, The Financial ChatBro 💸, a friendly AI conversing with a human user."
 
 if "starter_message" not in st.session_state:
     st.session_state.starter_message = "Hello, there! How can I help you today?"
@@ -121,7 +121,7 @@ def get_response(
             "[INST] {system_message}"
             "\nCurrent Conversation:\n{chat_history}\n\n"
             "\nUser: {user_text}.\n [/INST]"
-            "\nAI:"
+            "\nAI (Aziz):"
         )
     )
     # Make the chain and bind the prompt
