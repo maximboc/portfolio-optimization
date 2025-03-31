@@ -2,6 +2,11 @@ from pygad import GA
 import numpy as np
 import hydra
 from omegaconf import OmegaConf
+import os
+import sys
+
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, project_root)
 
 from utils.markovitz_utils import *
 from utils.finance_utils import get_adj_close_from_stocks, get_risk_free_rate, get_maximum_risk
@@ -28,16 +33,29 @@ from marko_ga.initializations import initialization_functions
 ##   - Directional Mutation
 ##   - Gaussian mutation with normalization
 
+class MyCustomGA(GA):
+    def initialize_population(self):
+        self.population = np.random.normal(loc=5, scale=2, size=(self.sol_per_pop, self.num_genes))
 
-
-@hydra.main(config_path="config", config_name="config")
+@hydra.main(config_path="config", config_name="simple.yml")
 def main(cfg: OmegaConf):
 
-    ga_model = pygad.GA(
+    ga_model = GA(
+        num_generations=cfg.ga.num_generations,
         fitness_func=objective_functions[cfg.objective],
-        selection_operator=selection_operators[cfg.selection],
-        mutation_operator=mutation_operators[cfg.mutation],
-        initialization_func=initialization_functions[cfg.init],
+
+        parent_selection_type=selection_operators[cfg.selection],
+        num_parents_mating=cfg.ga.num_parents_mating,
+
+        crossover_type=crossover_operators[cfg.crossover],
+        crossover_probability=cfg.ga.crossover_probability,
+
+        mutation_type=mutation_operators[cfg.mutation],
+        mutation_probability=cfg.ga.mutation_probability,
+
+        initial_population=initialization_functions[cfg.init](cfg.ga.initial_population, cfg.ga.num_genes),
+        num_genes=cfg.ga.num_genes,
+        random_seed=cfg.seed
     )
     best_solution, best_fitness = ga_model.solve()
     ga_model.plot()
