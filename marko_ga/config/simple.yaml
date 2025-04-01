@@ -4,14 +4,20 @@ ga:
   initial_population: 1000
   crossover_probability: 0.3
   mutation_probability: 0.05
-  num_genes: 10
+data:
+  start_date: '2024-03-30'
+  end_date: '2024-04-30'
+  stocks:
+    - AAPL
+    - MSFT
+    - GOOG
 termination:
   max_epoch: 1100
   max_fe: 80000
   max_time: 10.5
   max_early_stop: 25
 crossover: "arithmetic"
-mutation: "mutate_gaussian"
+mutation: "gaussian"
 objective: "sharpe"
 selection: "tournament"
 init: "uniform"

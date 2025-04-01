@@ -1,6 +1,10 @@
 # objective_functions.py
-from utils.markovitz_utils import negative_sharpe_ratio
+from utils.markovitz_utils import sharpe_ratio
+import numpy as np
+def fitness_func(ga_instance, solution, solution_idx):
+    sharpe = sharpe_ratio(solution, ga_instance.log_returns, ga_instance.cov_matrix, ga_instance.risk_free_rate)
+    return sharpe
 
 objective_functions = {
-    "sharpe": negative_sharpe_ratio,
+    "sharpe": fitness_func,
 }

@@ -1,6 +1,6 @@
 import numpy as np
 
-def cross_arithmetic(parents, offspring_size):
+def cross_arithmetic(parents, offspring_size, ga_instance):
     offspring = np.empty(offspring_size)
     idx = 0
     for i in range(0, len(parents), 2):
@@ -26,7 +26,7 @@ def cross_arithmetic(parents, offspring_size):
             
     return offspring
 
-def cross_convex_combination(parents, offspring_size):
+def cross_convex_combination(parents, offspring_size, ga_instance):
     offspring = np.empty(offspring_size)
     
     idx = 0
