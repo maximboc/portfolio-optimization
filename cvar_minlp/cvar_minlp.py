@@ -40,6 +40,7 @@ def cvar_minlp(
     
     # Compute log returns
     log_returns = np.log(adj_close_df / adj_close_df.shift(1))
+    print(f"Log returns:\n{log_returns}")
     log_returns = log_returns.dropna()
     
     N = log_returns.shape[0]  # Number of scenarios (days)
@@ -60,7 +61,7 @@ def cvar_minlp(
     z = [m.Var(lb=0, ub=1, integer=True) for _ in range(M)]
     
     # Minimum investment threshold if asset is selected
-    min_investment = 0.01  # Minimum 1% if selected
+    min_investment = 0.01 # Minimum 1% if selected
     
     # Link binary variables to weights
     for i in range(M):
@@ -79,7 +80,7 @@ def cvar_minlp(
     
     # Calculate portfolio returns for each scenario
     for i in range(N):
-        portfolio_return = m.sum([log_returns.iloc[i, j] * w[j] for j in range(M)])
+        portfolio_return = m.sum([log_returns.iloc[i, j] * w[j] - risk_rate for j in range(M)])
         # CVaR constraint: excess loss beyond VaR threshold
         m.Equation(xi[i] >= -portfolio_return - var_threshold)
     
@@ -110,7 +111,7 @@ def main():
     stocks = ['TSLA','AAPL', 'MSFT', 'AMZN']
     start_date = '2023-04-01'
     end_date = '2024-03-31'
-    risk_rate = 0.55  # 0.2%
+    risk_rate = 0.25 # 5%
     
     # Define bounds (min and max weights)
     min_weights = [0.0] * len(stocks)
