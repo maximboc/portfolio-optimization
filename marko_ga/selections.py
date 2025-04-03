@@ -25,7 +25,9 @@ def custom_top_k_selection(fitness, num_parents, ga_instance):
 def custom_best_selection(fitness, num_parents, ga_instance):
     best_index = np.argmax(fitness)
     best_parent = ga_instance.population[best_index].copy()
-    return np.array([best_parent]), np.array([best_index])
+    selected_parents = np.array([best_parent] * num_parents)
+    selected_indices = np.array([best_index] * num_parents)
+    return selected_parents, selected_indices
 
 def custom_threshold_selection(threshold):
     def custom_threshold_selection_(fitness, num_parents, ga_instance):

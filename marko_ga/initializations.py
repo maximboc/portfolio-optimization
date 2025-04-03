@@ -3,9 +3,7 @@ import numpy as np
 def uniform_initialization(num_solutions, num_genes):
     pop = []
     for _ in range(num_solutions):
-        genes = np.random.uniform(0,1,num_genes)
-        genes = genes / np.sum(genes)
-        pop.append(genes)
+        pop.append(np.ones(num_genes)/num_genes)
 
     return np.array(pop)
 

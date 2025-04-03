@@ -175,7 +175,7 @@ def ga(config: str) -> dict:
             log_returns=log_returns,
             on_parents=on_parents_callback,
             save_best_solutions=True,
-
+            parallel_processing=5,
             on_generation=early_stopping(cfg.ga.termination),
         )
         start_time = time.time()        

@@ -330,7 +330,7 @@ def init_multi_model_display(num_assets: int):
                     my_model_dict = select_model(
                         model, final_tickers, start_date, end_date, bounds, cur_risk
                     )
-                    
+                    print(my_model_dict)
                     # Calculate the returns
                     opti_return, opti_returns_time = get_portfolio_return(
                         final_tickers, my_model_dict["weights"], start_date, end_date

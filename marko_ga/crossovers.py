@@ -59,5 +59,5 @@ def cross_convex_combination(n = 3):
 
 crossover_operators = {
     "arithmetic": cross_arithmetic,
-    "convex_combination": cross_convex_combination
+    "convex_combination": cross_convex_combination()
 }

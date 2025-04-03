@@ -1,5 +1,5 @@
 ga:
-  num_generations: 50
+  num_generations: 200
   num_parents_mating: 10
   initial_population: 100
   crossover_probability: 0.3
@@ -19,5 +19,5 @@ crossover: "convex_combination"
 mutation: "directional"
 objective: "sharpe"
 selection: "best"
-init: "gaussian"
+init: "uniform"
 seed: 42

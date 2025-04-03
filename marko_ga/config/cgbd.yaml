@@ -16,7 +16,7 @@ data:
     - MSFT
     - GOOG
 crossover: "convex_combination"
-mutation: "directional"
+mutation: "gaussian"
 objective: "sharpe"
 selection: "best"
 init: "dirichlet"

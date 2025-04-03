@@ -6,7 +6,13 @@ def mutate_directional(alpha = 0.01):
             direction = np.random.randn(*offspring[i].shape)
             direction -= np.mean(direction)
             offspring[i] += alpha * direction
-            offspring[i] /= np.sum(offspring[i])
+            
+            # Clip weights to be between 0 and 1
+            offspring[i] = np.clip(offspring[i], 0, 1)
+            
+            # Normalize to ensure weights sum to 1
+            if np.sum(offspring[i]) > 0:
+                offspring[i] /= np.sum(offspring[i])
 
         return offspring
     return _directional
