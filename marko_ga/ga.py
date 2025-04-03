@@ -9,37 +9,6 @@ from typing import List
 from dataclasses import dataclass
 import logging
 
-logging.basicConfig(level=logging.INFO, 
-                   format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger("GA_Portfolio")
-
-def on_parents_callback(ga_instance, selected_parents):
-    """Log information about selected parents"""
-    logger.info(f"Generation {ga_instance.generations_completed}: Selected {len(selected_parents)} parents")
-    
-    # Get fitness of parents
-    parents_fitness = []
-    for parent_idx in range(len(selected_parents)):
-        parent_fitness = ga_instance.last_generation_fitness[ga_instance.last_generation_parents_indices[parent_idx]]
-        parents_fitness.append(parent_fitness)
-    
-    logger.info(f"Parents fitness: min={min(parents_fitness):.6f}, max={max(parents_fitness):.6f}, avg={np.mean(parents_fitness):.6f}")
-    logger.info(f"Parent indices: {ga_instance.last_generation_parents_indices}")
-    
-    # Optionally log more details about best parent
-    best_parent_idx = np.argmax(parents_fitness)
-    best_parent = selected_parents[best_parent_idx]
-    logger.info(f"Best parent weights: {best_parent}")
-    
-    # Calculate portfolio metrics for best parent
-    weights = best_parent
-    portfolio_return = expected_return(weights, ga_instance.log_returns)
-    portfolio_risk = standard_deviation(weights, ga_instance.cov_matrix)
-    logger.info(f"Best parent - Return: {portfolio_return:.4f}, Risk: {portfolio_risk:.4f}")
-
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, project_root)
-
 from utils.markovitz_utils import *
 from utils.finance_utils import get_adj_close_from_stocks, get_risk_free_rate, get_maximum_risk
 
@@ -49,21 +18,48 @@ from marko_ga.objectives import objective_functions
 from marko_ga.crossovers import crossover_operators
 from marko_ga.initializations import initialization_functions
 
-## Model
-# Genome: [weights] such that sum weights = 1
-# Init:
-##   - Uniform (1/n)
-##   - numpy.random.dirichlet
-# selection:
-##   - Best (given objective function)
-##   - Top K
-##   - Threshold
-# crossover:
-##   - Arithmetic Crossover: Weighted sum of 2 parents
-##   - Convex combination: generalization with alea
-# mutation:
-##   - Directional Mutation
-##   - Gaussian mutation with normalization
+logging.basicConfig(level=logging.INFO, 
+                   format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger("Portfolio/GA")
+
+best_fitness = -np.inf
+
+def on_parents_callback(ga_instance, selected_parents) -> None:
+    """Log information about selected parents"""
+    logger.info(f"Generation {ga_instance.generations_completed}: Selected {len(selected_parents)} parents")
+
+    parents_fitness = []
+    for parent_idx in range(len(selected_parents)):
+        parent_fitness = ga_instance.last_generation_fitness[ga_instance.last_generation_parents_indices[parent_idx]]
+        parents_fitness.append(parent_fitness)
+    
+    logger.info(f"Parents fitness: min={min(parents_fitness):.6f}, max={max(parents_fitness):.6f}, avg={np.mean(parents_fitness):.6f}")
+    logger.info(f"Parent indices: {ga_instance.last_generation_parents_indices}")
+
+    best_parent_idx = np.argmax(parents_fitness)
+    best_parent = selected_parents[best_parent_idx]
+    logger.info(f"Best parent weights: {best_parent}")
+    logger.info(f"np sum is {np.sum(best_parent)}")
+
+    weights = best_parent
+    portfolio_return = expected_return(weights, ga_instance.log_returns)
+    portfolio_risk = standard_deviation(weights, ga_instance.cov_matrix)
+    logger.info(f"Best parent - Return: {portfolio_return:.4f}, Risk: {portfolio_risk:.4f}")
+
+def early_stopping(termination):
+    def _early_stopping(ga_instance) -> str:
+        global best_fitness
+        if termination.minimal_generations > ga_instance.generations_completed:
+            return ""
+        if np.abs(ga_instance.best_solution()[1] - best_fitness) < termination.epsilon:
+            logger.warning(f"Early stopping at generation {ga_instance.generations_completed}")
+            return "stop"
+        best_fitness = max(best_fitness, ga_instance.best_solution()[1])
+        return ""
+    return _early_stopping
+
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, project_root)
 
 class MyCustomGA(GA):
     def __init__(self, fitness_func, cov_matrix, log_returns, **kwargs):
@@ -90,7 +86,6 @@ class Config:
 
 @hydra.main(config_path="config", config_name="simple.yaml", version_base="1.2")
 def main(cfg: Config):
-    #print(OmegaConf.to_yaml(cfg))
     adj_close_df = get_adj_close_from_stocks(cfg.data.stocks, cfg.data.start_date, cfg.data.end_date)
     print(adj_close_df)
     if adj_close_df.empty:
@@ -123,6 +118,9 @@ def main(cfg: Config):
         cov_matrix=cov_matrix,
         log_returns=log_returns,
         on_parents=on_parents_callback,
+        save_solutions=True,
+
+        on_generation=early_stopping(cfg.ga.termination),
     )
     ga_model.run()
     best_solution = ga_model.best_solution()

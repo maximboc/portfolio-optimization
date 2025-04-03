@@ -16,6 +16,6 @@ def dirichlet_initialization(num_solutions, num_genes):
     return np.array(pop)
 
 initialization_functions = {
-    "dirichelt": dirichlet_initialization,
+    "dirichlet": dirichlet_initialization,
     "uniform": uniform_initialization
 }
