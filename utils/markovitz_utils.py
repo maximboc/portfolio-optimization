@@ -5,7 +5,7 @@ def standard_deviation(weights, cov_matrix):
     return np.sqrt(variance)
 
 def expected_return(weights, log_returns):
-    return np.sum(log_returns.mean() * weights) * 252
+    return np.sum(log_returns.mean() * weights) * 250.8875
 
 def sharpe_ratio(weights, log_returns, cov_matrix, risk_free_rate):
 	p_return = expected_return(weights, log_returns) - risk_free_rate
