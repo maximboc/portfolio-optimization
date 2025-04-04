@@ -4,8 +4,9 @@ import pandas as pd
 import numpy as np
 from scipy.optimize import minimize
 from utils.markovitz_utils import *
-from utils.finance_utils import get_adj_close_from_stocks, get_risk_free_rate, get_maximum_risk
+from utils.finance_utils import get_adj_close_from_stocks
 import streamlit as st
+
 
 def slsqp(
     stocks: list,
@@ -17,6 +18,7 @@ def slsqp(
     """
     Function implementing the Markowitz Model - SLSQP
     """
+    fitness = []
     
     adj_close_df = get_adj_close_from_stocks(stocks, start_date, end_date)
     if adj_close_df.empty:
@@ -34,11 +36,8 @@ def slsqp(
     # Covariance matrice (on trading days)
     cov_matrix = log_returns.cov() * 250.8875
 
-
-    # Set initial weights equally distributed
     initial_weights = np.array([1 / len(stocks)] * len(stocks))
 
-    # Sharpe Ratio
     optimized_results = minimize(
         negative_sharpe_ratio,
         initial_weights,
@@ -46,8 +45,14 @@ def slsqp(
         method="SLSQP",
         constraints=constraints,
         bounds=bounds,
+        callback=lambda x: fitness.append(sharpe_ratio(x, log_returns, cov_matrix, risk_rate)),
     )
 
     optimized_weights = optimized_results.x
 
-    return optimized_weights
+    return {
+        "weights": optimized_weights,
+        "fitness": fitness,
+        "best_fitness": fitness[-1],
+        "time": optimized_results.nit,
+    }

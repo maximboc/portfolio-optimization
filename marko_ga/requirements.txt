@@ -1,0 +1,3 @@
+pygad
+hydra-core
+numpy
