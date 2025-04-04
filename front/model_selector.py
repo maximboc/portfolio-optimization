@@ -1,5 +1,6 @@
 import datetime
 from marko_slsqp.markowitz_slsqp import slsqp
+from marko_cpsat.markowitz_cpsat import cpsat
 
 def select_model(
     model: str,
@@ -16,7 +17,7 @@ def select_model(
         case "GA":
             return slsqp(tickers, start_date, end_date, bounds, risk)
         case "CP_SAT":
-            return slsqp(tickers, start_date, end_date, bounds, risk)
+            return cpsat(tickers, start_date, end_date, bounds, risk)
         case "MINLP":
             return slsqp(tickers, start_date, end_date, bounds, risk)
         case _:
