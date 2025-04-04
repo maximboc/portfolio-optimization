@@ -8,3 +8,4 @@ streamlit
 streamlit-extras
 yahooquery
 plotly
+ortools

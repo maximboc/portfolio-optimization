@@ -1,5 +1,6 @@
 import datetime
 from marko_slsqp.markowitz_slsqp import slsqp
+from marko_cpsat.markowitz_cpsat import cpsat
 from marko_ga.ga import ga
 
 def select_model(
@@ -25,7 +26,7 @@ def select_model(
         case "GA(Convex-Gaussian-Best-Uniform)":
             return ga("cgbu.yaml")(tickers, start_date, end_date, bounds, risk)
         case "CP_SAT":
-            return slsqp(tickers, start_date, end_date, bounds, risk)
+            return cpsat(tickers, start_date, end_date, bounds, risk)
         case "MINLP":
             return slsqp(tickers, start_date, end_date, bounds, risk)
         case _:
