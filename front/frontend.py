@@ -1,6 +1,9 @@
 import streamlit as st
 import pandas as pd
 import datetime
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
 
 from utils.finance_utils import create_bounds, get_adj_close_from_stocks, get_maximum_risk, get_portfolio_return, get_risk_free_rate
 from .model_selector import select_model
@@ -158,30 +161,140 @@ def display_stocks(num_assets: int):
     return tickers, allocations, start_date, end_date, min_weights, max_weights
 
 
-def init_display(num_assets: int, model: str):
-
-    tickers, allocations, start_date, end_date, min_weights, max_weights = (
-        display_stocks(num_assets)
-    )
-
-    model = models_dict[model]
+def plot_multi_model_returns(models_returns, original_returns=None):
+    """
+    Plot returns for multiple models plus original allocation if provided
     
+    Args:
+        models_returns: Dictionary with model names as keys and returns time series as values
+        original_returns: Optional time series of original allocation returns
+    """
+    # Create a combined DataFrame for all models
+    combined_df = pd.DataFrame()
+    
+    # Add each model's returns
+    for model_name, returns in models_returns.items():
+        combined_df[model_name] = returns
+    
+    # Add original allocation if provided
+    if original_returns is not None:
+        combined_df["Original Allocation"] = original_returns
+    
+    st.subheader("Portfolio Performance Comparison")
+    st.line_chart(combined_df)
+    st.caption("Date vs Cumulative Return (%)")
+
+def compare_model_metrics(models_data):
+    """
+    Create a comparison table of model metrics
+    
+    Args:
+        models_data: Dictionary with model names as keys and metric dictionaries as values
+    """
+    metrics_df = pd.DataFrame(columns=["Model", "Total Return (%)", "Sharpe Ratio", "Max Drawdown (%)", "Volatility (%)", "Risk (%)"])
+    
+    for model_name, metrics in models_data.items():
+        new_row = pd.DataFrame({
+            "Model": [model_name],
+            "Total Return (%)": [metrics.get("return", 0)],
+            "Sharpe Ratio": [metrics.get("sharpe", 0)],
+            "Max Drawdown (%)": [metrics.get("max_drawdown", 0)],
+            "Volatility (%)": [metrics.get("volatility", 0)],
+            "Risk (%)": [metrics.get("risk", 0)]
+        })
+        metrics_df = pd.concat([metrics_df, new_row], ignore_index=True)
+    
+    st.subheader("Model Performance Metrics")
+    st.dataframe(metrics_df)
+    
+    # Create bar chart comparison for total return
+    st.subheader("Total Return Comparison")
+    chart_data = metrics_df[["Model", "Total Return (%)"]].set_index("Model")
+    st.bar_chart(chart_data)
+
+
+def calculate_model_metrics(returns_series, risk):
+    """
+    Calculate various performance metrics from a returns time series
+    
+    Args:
+        returns_series: Time series of portfolio returns
+        risk: Risk level used for the model
+        
+    Returns:
+        Dictionary of metrics
+    """
+    # Calculate daily returns
+    daily_returns = returns_series.pct_change().dropna()
+    
+    # Total return
+    total_return = (returns_series.iloc[-1] / returns_series.iloc[0] - 1) * 100
+    
+    # Volatility (annualized)
+    volatility = daily_returns.std() * np.sqrt(252) * 100
+    
+    # Sharpe ratio (assuming risk-free rate from the function)
+    risk_free = get_risk_free_rate()
+    sharpe = (total_return/100 - risk_free) / (volatility/100)
+    
+    # Maximum drawdown
+    cum_returns = (1 + daily_returns).cumprod()
+    running_max = cum_returns.cummax()
+    drawdown = (cum_returns / running_max - 1) * 100
+    max_drawdown = drawdown.min()
+    
+    return {
+        "return": total_return,
+        "volatility": volatility,
+        "sharpe": sharpe,
+        "max_drawdown": max_drawdown,
+        "risk": risk * 100
+    }
+
+
+def init_multi_model_display(num_assets: int):
+    # First get all the stock data and allocations
+    tickers, allocations, start_date, end_date, min_weights, max_weights = display_stocks(num_assets)
+    
+    # Get risk-free rate and max risk
     risk_free_rate = get_risk_free_rate()
     cur_tickers = [t for t in tickers if t]
-
+    
+    if not cur_tickers:
+        st.error("Please select at least one stock.")
+        return
+    
     max_risk = get_maximum_risk(cur_tickers, start_date, end_date)
-
-    cur_risk = st.sidebar.number_input("Choose risk rate", min_value=risk_free_rate * 100, max_value=max_risk * 100, value=risk_free_rate * 100, step=0.1)
+    
+    # Allow selection of risk level
+    cur_risk = st.sidebar.number_input(
+        "Choose risk rate", 
+        min_value=risk_free_rate * 100, 
+        max_value=max_risk * 100, 
+        value=risk_free_rate * 100, 
+        step=0.1
+    )
     cur_risk /= 100
-
+    
     st.sidebar.write(
         f"For your portfolio, the minimum risk is {risk_free_rate:.2%} and the maximum risk is {max_risk:.2%}."
     )
     
-    if st.sidebar.button("Calculate Return"):
+    st.sidebar.subheader("Select Models to Compare")
+    selected_models = {}
+    for model_name in models_dict.keys():
+        selected_models[model_name] = st.sidebar.checkbox(f"Include {model_name}", model_name == "Sharpe Ratio")
+    
+    selected_model_names = [name for name, selected in selected_models.items() if selected]
+    
+    if not selected_model_names:
+        st.sidebar.warning("Please select at least one model for comparison")
+        return
+    
+    if st.sidebar.button("Calculate and Compare Models"):
         final_tickers = [t for t in tickers if t]
         final_allocations = [allocations[i] for i, t in enumerate(tickers) if t]
-
+        
         if not final_tickers:
             st.error("Please select at least one stock.")
             if start_date > end_date:
@@ -194,47 +307,88 @@ def init_display(num_assets: int, model: str):
         elif start_date > end_date:
             st.error("Start date should be before End Date.")
         else:
-            try:
-                with st.spinner("Calculating portfolio returns..."):
-                    bounds = create_bounds(min_weights, max_weights)
-                    opti_weights = select_model(
+            bounds = create_bounds(min_weights, max_weights)
+            
+            og_return, og_returns_time = get_portfolio_return(
+                final_tickers, final_allocations, start_date, end_date
+            )
+            
+            st.subheader("Model Performance Comparison")
+            
+            model_returns = {}
+            model_metrics = {}
+            model_allocations = {}
+            
+            progress_bar = st.progress(0)
+            progress_step = 1 / len(selected_model_names)
+            progress_value = 0
+            
+            for i, model_name in enumerate(selected_model_names):
+                with st.spinner(f"Calculating {model_name} model..."):
+                    model = models_dict[model_name]
+                    
+                    my_model_dict = select_model(
                         model, final_tickers, start_date, end_date, bounds, cur_risk
                     )
-
+                    print(my_model_dict)
+                    # Calculate the returns
                     opti_return, opti_returns_time = get_portfolio_return(
-                        final_tickers, opti_weights, start_date, end_date
+                        final_tickers, my_model_dict["weights"], start_date, end_date
                     )
-
-                    og_return, og_returns_time = get_portfolio_return(
-                        final_tickers, final_allocations, start_date, end_date
-                    )
+                    
+                    # Store results
+                    model_returns[model_name] = opti_returns_time
+                    model_metrics[model_name] = calculate_model_metrics(opti_returns_time, cur_risk)
+                    model_allocations[model_name] = my_model_dict["weights"]
+                    
+                    # Update progress
+                    progress_value += progress_step
+                    progress_bar.progress(min(progress_value, 1.0))
+            
+            # Clear progress bar
+            progress_bar.empty()
+            
+            # Plot returns for all models
+            st.subheader("📈 Cumulative Returns Comparison")
+            plot_multi_model_returns(model_returns, og_returns_time)
+            
+            # Show metrics comparison
+            compare_model_metrics(model_metrics)
+            
+            # Display optimal allocations for each model
+            st.subheader("Optimal Allocations by Model")
+            
+            # Create tabs for each model's allocation
+            tabs = st.tabs(selected_model_names)
+            for i, (model_name, tab) in enumerate(zip(selected_model_names, tabs)):
+                with tab:
                     print_portfolio(
-                        name="Optimized Porftolio",
+                        name=f"{model_name} Optimal Allocation",
                         tickers=st.session_state.selected_tickers,
-                        allocations=opti_weights,
+                        allocations=model_allocations[model_name],
                         bounds=bounds,
                     )
-                    
-                    
-                    
-                    plot_returns(opti_returns_time, og_returns_time)
-                    st.success(
-                        f"Your return : {og_return:.2f}% \n Optimized Portfolio return : {opti_return:.2f}%"
-                    )
-
-                    st.subheader("📈 Individual Stock Returns Over the Selected Period")
-
-                    stock_prices = get_adj_close_from_stocks(final_tickers, start_date, end_date)
-
-                    stock_returns = (stock_prices.iloc[-1] / stock_prices.iloc[0] - 1) * 100
-
-                    st.dataframe(stock_returns.to_frame(name="Return (%)"))
-
-                    st.line_chart(stock_prices / stock_prices.iloc[0] * 100, use_container_width=True)
-
-                    
-            except Exception as e:
-                st.error(f"Error calculating returns: {e}")
+            
+            # Display original allocation as a separate tab
+            original_tab = st.expander("Original Allocation")
+            with original_tab:
+                st.write(f"Original allocation return: {og_return:.2f}%")
+                print_portfolio(
+                    name="Original Portfolio",
+                    tickers=st.session_state.selected_tickers,
+                    allocations=final_allocations,
+                    min_weights=min_weights,
+                    max_weights=max_weights,
+                )
+            
+            # Stock performance
+            st.subheader("📈 Individual Stock Returns Over the Selected Period")
+            stock_prices = get_adj_close_from_stocks(final_tickers, start_date, end_date)
+            stock_returns = (stock_prices.iloc[-1] / stock_prices.iloc[0] - 1) * 100
+            st.dataframe(stock_returns.to_frame(name="Return (%)"))
+            st.line_chart(stock_prices / stock_prices.iloc[0] * 100, use_container_width=True)
+                
+                
     st.sidebar.markdown(
         "**⚠️ Past performances<br>cannot predict the future.**", 
         unsafe_allow_html=True

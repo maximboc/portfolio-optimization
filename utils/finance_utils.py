@@ -70,6 +70,8 @@ def get_portfolio_return(tickers, weights, start_date, end_date):
         "Adj Close"
     ]
     returns = data.pct_change().dropna()
+    print("return is " + str(returns))
+    print("weight is " + str(weights))
     portfolio_returns = (returns * weights).sum(axis=1)
 
     cumulative_returns = (1 + portfolio_returns).cumprod() - 1
