@@ -175,7 +175,6 @@ def plot_multi_model_returns(models_returns, original_returns=None):
     # Add each model's returns
     for model_name, returns in models_returns.items():
         combined_df[model_name] = returns
-    
     # Add original allocation if provided
     if original_returns is not None:
         combined_df["Original Allocation"] = original_returns
@@ -228,7 +227,7 @@ def calculate_model_metrics(returns_series, risk):
     daily_returns = returns_series.pct_change().dropna()
     
     # Total return
-    total_return = (returns_series.iloc[-1] / returns_series.iloc[0] - 1) * 100
+    total_return = returns_series.iloc[-1] * 100
     
     # Volatility (annualized)
     volatility = daily_returns.std() * np.sqrt(252) * 100
@@ -264,6 +263,14 @@ def init_multi_model_display(num_assets: int):
         st.error("Please select at least one stock.")
         return
     
+    money_amount = st.sidebar.number_input(
+        "Choose an initial money amount",
+        min_value= 1000,
+        max_value=100000000000,
+        value=10000,
+        step=1000
+    )
+    
     max_risk = get_maximum_risk(cur_tickers, start_date, end_date)
     
     # Allow selection of risk level
@@ -279,6 +286,7 @@ def init_multi_model_display(num_assets: int):
     st.sidebar.write(
         f"For your portfolio, the minimum risk is {risk_free_rate:.2%} and the maximum risk is {max_risk:.2%}."
     )
+    st.sidebar.warning("Note: SLSQP will only take the minimum risk rate")
     
     st.sidebar.subheader("Select Models to Compare")
     selected_models = {}
@@ -383,6 +391,20 @@ def init_multi_model_display(num_assets: int):
                     min_weights=min_weights,
                     max_weights=max_weights,
                 )
+
+            # Money wise
+            model_values = {}
+
+            # Original portfolio value evolution
+            model_values["Original"] = (1 + og_returns_time) * money_amount
+
+            # Compute cumulative value evolution for each model
+            for model_name, cumulative_returns in model_returns.items():
+                model_values[model_name] = (1 + cumulative_returns) * money_amount
+
+            # Plot evolution of portfolio value
+            st.subheader(f"💰 Portfolio Value Over Time (${money_amount:,.0f} Initial Investment)")
+            st.line_chart(pd.DataFrame(model_values), use_container_width=True)
             
             # Stock performance
             st.subheader("📈 Individual Stock Returns Over the Selected Period")
@@ -390,7 +412,7 @@ def init_multi_model_display(num_assets: int):
             stock_returns = (stock_prices.iloc[-1] / stock_prices.iloc[0] - 1) * 100
             st.dataframe(stock_returns.to_frame(name="Return (%)"))
             st.line_chart(stock_prices / stock_prices.iloc[0] * 100, use_container_width=True)
-                
+            
                 
     st.sidebar.markdown(
         "**⚠️ Past performances<br>cannot predict the future.**", 
