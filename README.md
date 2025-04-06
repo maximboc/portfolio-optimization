@@ -16,7 +16,13 @@ Select a set of investments (stocks, assets) that maximize expected return for a
 
 ## Our Project
 
-We are EPITA students working on a portfolio optimization project for our Constraint Programming course. Our team members are: Maxim Bocquillion, Khaled Mili, Aurélien Daudin, Samy Yacef, and Mateo Lelong.
+We are students from EPITA's AI and Data major working on a portfolio optimization project for our 'Programmation par Contraintes' course.
+Our team members are:
+- Aurélien Daudin
+- Maxim Bocquillion
+- Khaled Mili
+- Mateo Lelong
+- Samy Yacef
 
 ### Implemented Models
 
