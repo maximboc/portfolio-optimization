@@ -14,7 +14,6 @@ def select_model(
     match model:
         case "SLSQP":
             return slsqp(tickers, start_date, end_date, bounds, risk)
-        # TODO
         case "GA(Arithmetic-Gaussian-Tournament-Dirichlet)":
             return ga("agtd.yaml")(tickers, start_date, end_date, bounds, risk)
         case "GA(Convex-Gaussian-Tournament-Dirichlet)":

@@ -326,9 +326,11 @@ def init_multi_model_display(num_assets: int):
             for i, model_name in enumerate(selected_model_names):
                 with st.spinner(f"Calculating {model_name} model..."):
                     model = models_dict[model_name]
-                    
+                    if (model == "SLSQP"):
+                        cur_risk = risk_free_rate
+
                     my_model_dict = select_model(
-                        model, final_tickers, start_date, end_date, bounds, cur_risk
+                        model, final_tickers, start_date, end_date, bounds, cur_risk, risk_free_rate
                     )
                     print(my_model_dict)
                     # Calculate the returns
