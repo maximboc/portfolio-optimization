@@ -23,7 +23,7 @@ We are EPITA students working on a portfolio optimization project for our Constr
 - Markowitz Model - SLSQP
 - Markowitz Model with Cardinality Constraints
 - CVaR with Constraints
-- Markowitz Model with Additional Cardinality Constraints (if different, specify the difference)
+- Markowitz Model with Additional Cardinality Constraints
 
 ### Additional Features
 
