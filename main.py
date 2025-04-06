@@ -1,22 +1,44 @@
 import streamlit as st
-from front.frontend import init_multi_model_display
+from pages.multiple_models import *
+from pages.single_model import *
+from pages.llm import *
 
-if __name__ == "__main__":
+def hide_streamlit_style():
+    """Used to hide the Streamlit menu and footer."""
+    hide_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            </style>
+            """
+    st.markdown(hide_style, unsafe_allow_html=True)
 
-    st.title("Portfolio Optimization Calculator")
+def main():
+    st.set_page_config(
+        page_title="Portfolio Optimization & Financial ChatBot", page_icon="📈"
+    )
+    hide_streamlit_style()
 
-    st.sidebar.header("Portfolio Allocation")
-
-    num_assets = st.sidebar.number_input(
-        "Number of assets in portfolio", min_value=1, max_value=20, value=5, step=1
+    # Sidebar for page selection
+    st.sidebar.title("Navigation")
+    page = st.sidebar.radio(
+        "Select a Page",
+        (
+            "Portfolio Optimization",
+            "Multi-Model Portfolio Optimization",
+            "Aziz - The Financial ChatBro",
+        ),
     )
 
-    st.markdown("""
-    ## Multi-Model Portfolio Optimization
+    if page == "Portfolio Optimization":
+        page_single()
 
-    This tool allows you to compare different optimization strategies for your investment portfolio.
-    Select stocks, set allocations, and compare how different optimization models would adjust your 
-    portfolio to maximize returns for a given risk level.
-    """)
+    elif page == "Multi-Model Portfolio Optimization":
+        page_multi()
 
-    init_multi_model_display(num_assets)
+    elif page == "Aziz - The Financial ChatBro":
+        page_llm()
+
+
+if __name__ == "__main__":
+    main()

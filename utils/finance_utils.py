@@ -66,14 +66,16 @@ def get_portfolio_return(tickers, weights, start_date, end_date):
         search_stocks(ticker.strip())[0]['symbol'] if not ticker.isalpha() else ticker
         for ticker in tickers
     ]
+    print(tickers)
     data = yf.download(tickers, start=start_date, end=end_date, auto_adjust=False)[
         "Adj Close"
     ]
     returns = data.pct_change().dropna()
+    print(returns)
     print("return is " + str(returns))
     print("weight is " + str(weights))
     portfolio_returns = (returns * weights).sum(axis=1)
-
+    print(portfolio_returns)
     cumulative_returns = (1 + portfolio_returns).cumprod() - 1
     # first one => to plot over time
     # second => final return over the time period

@@ -1,7 +1,7 @@
 import datetime
-from marko_slsqp.markowitz_slsqp import slsqp
-from marko_cpsat.markowitz_cpsat import cpsat
-from marko_ga.ga import ga
+from models.marko_slsqp.markowitz_slsqp import slsqp
+from models.marko_cpsat.markowitz_cpsat import cpsat
+from models.marko_ga.ga import ga
 
 def select_model(
     model: str,
