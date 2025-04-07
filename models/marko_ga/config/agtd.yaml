@@ -5,7 +5,7 @@ ga:
   crossover_probability: 0.3
   mutation_probability: 0.05
   termination:
-    minimal_generations: 10
+    minimal_generations: 100
     epsilon: 1e-2
 data:
   start_date: '2024-03-30'
