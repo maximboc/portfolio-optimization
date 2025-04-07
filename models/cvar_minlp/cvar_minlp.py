@@ -96,7 +96,8 @@ def cvar_minlp(
         
         # Extract optimized weights
         optimized_weights = np.array([w[i].value[0] for i in range(M)])
-        return optimized_weights
+        
+        return {"weights":optimized_weights}
         
     except Exception as e:
         print(f"Optimization error: {e}")

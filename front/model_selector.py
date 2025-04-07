@@ -2,6 +2,7 @@ import datetime
 from models.marko_slsqp.markowitz_slsqp import slsqp
 from models.marko_cpsat.markowitz_cpsat import cpsat
 from models.marko_ga.ga import ga
+from models.cvar_minlp.cvar_minlp import cvar_minlp
 
 def select_model(
     model: str,
@@ -27,7 +28,7 @@ def select_model(
         case "CP_SAT":
             return cpsat(tickers, start_date, end_date, bounds, risk)
         case "MINLP":
-            return slsqp(tickers, start_date, end_date, bounds, risk)
+            return cvar_minlp(tickers, start_date, end_date, bounds, risk)
         case _:
             print(f"ERROR - model {model} should not exists")
             return {"weights": []}
