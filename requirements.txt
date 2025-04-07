@@ -14,3 +14,4 @@ seaborn==0.13.2
 streamlit==1.44.1
 yahooquery==2.3.7
 yfinance==0.2.55
+gekko
