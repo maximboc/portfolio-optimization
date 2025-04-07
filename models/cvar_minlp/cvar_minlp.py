@@ -102,7 +102,7 @@ def cvar_minlp(
     except Exception as e:
         print(f"Optimization error: {e}")
         # Return equally weighted portfolio as fallback
-        return np.array([1/M] * M)
+        return {"weights": np.array([1/M] * M)}
 
 def main():
     """
