@@ -102,38 +102,38 @@ def cvar_minlp(
     except Exception as e:
         print(f"Optimization error: {e}")
         # Return equally weighted portfolio as fallback
-        return {"weights": np.array([1/M] * M)}
+        return {"weights": np.array([1/M] for _ in range(M))}
 
-def main():
-    """
-    Test function to demonstrate the CVaR MINLP implementation
-    """
-    # Example usage
-    stocks = ['TSLA','AAPL', 'MSFT', 'AMZN']
-    start_date = '2023-04-01'
-    end_date = '2024-03-31'
-    risk_rate = 0.25 # 5%
+# def main():
+#     """
+#     Test function to demonstrate the CVaR MINLP implementation
+#     """
+#     # Example usage
+#     stocks = ['TSLA','AAPL', 'MSFT', 'AMZN']
+#     start_date = '2023-04-01'
+#     end_date = '2024-03-31'
+#     risk_rate = 0.25 # 5%
     
-    # Define bounds (min and max weights)
-    min_weights = [0.0] * len(stocks)
-    max_weights = [1.0] * len(stocks)
-    bounds = list(zip(min_weights, max_weights))
+#     # Define bounds (min and max weights)
+#     min_weights = [0.0] * len(stocks)
+#     max_weights = [1.0] * len(stocks)
+#     bounds = list(zip(min_weights, max_weights))
     
-    # Run optimization
-    optimized_weights = cvar_minlp(
-        stocks, 
-        start_date, 
-        end_date, 
-        bounds, 
-        risk_rate, 
-        confidence_level=0.95, 
-        max_assets=3  # Allow a maximum of 3 assets
-    )
+#     # Run optimization
+#     optimized_weights = cvar_minlp(
+#         stocks, 
+#         start_date, 
+#         end_date, 
+#         bounds, 
+#         risk_rate, 
+#         confidence_level=0.95, 
+#         max_assets=3  # Allow a maximum of 3 assets
+#     )
     
-    # Print the results
-    print("\nOptimized Portfolio Weights:")
-    for i, stock in enumerate(stocks):
-        print(f"{stock}: {optimized_weights[i]:.4f}")
+#     # Print the results
+#     print("\nOptimized Portfolio Weights:")
+#     for i, stock in enumerate(stocks):
+#         print(f"{stock}: {optimized_weights[i]:.4f}")
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
