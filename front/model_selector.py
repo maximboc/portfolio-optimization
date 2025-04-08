@@ -1,5 +1,6 @@
 import datetime
-from models.marko_slsqp.markowitz_slsqp import slsqp
+from models.marko_qp.slsqp import slsqp
+from models.marko_qp.qp import qp
 from models.marko_cpsat.markowitz_cpsat import cpsat
 from models.marko_ga.ga import ga
 from models.cvar_minlp.cvar_minlp import cvar_minlp
@@ -13,6 +14,8 @@ def select_model(
     risk : int
 ):
     match model:
+        case "QP":
+            return qp(tickers, start_date, end_date, bounds, None)
         case "SLSQP":
             return slsqp(tickers, start_date, end_date, bounds, risk)
         case "GA(Arithmetic-Gaussian-Tournament-Dirichlet)":
