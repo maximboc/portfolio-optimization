@@ -52,27 +52,20 @@ def cvar_minlp(
     # Initialize Gekko Model
     m = GEKKO(remote=False)
     m.options.SOLVER = 3  # Changed to BONMIN for better handling of integer variables
-    
-    # Decision Variables
-    w = [m.Var(lb=bounds[i][0], ub=bounds[i][1]) for i in range(M)]  # Portfolio weights
-    
+        
     # Binary variables for asset selection (MINLP part)
     z = [m.Var(lb=0, ub=1, integer=True) for _ in range(M)]
+    # Initialize bounds for weights
+    min_weights = [0.0] * M
+    max_weights = [1.0] * M
+    w = [m.Var(lb=min_weights[i], ub=max_weights[i]) for i in range(M)]  # Portfolio weights
     
-    # Minimum investment threshold if asset is selected
-    min_investment = 0.01 # Minimum 1% if selected
-    
-    # Link binary variables to weights
-    for i in range(M):
-        m.Equation(w[i] <= bounds[i][1] * z[i])
-        m.Equation(w[i] >= min_investment * z[i])
     
     # Cardinality constraint
     m.Equation(m.sum(z) <= max_assets)
     
     # Portfolio weights sum to 1
-    m.Equation(m.sum(w) == 1)
-    
+    m.Equation(m.sum(w) == 1)    
     # VaR and excess losses for CVaR
     var_threshold = m.Var(lb=-1, ub=1)  # VaR threshold
     xi = [m.Var(lb=0) for _ in range(N)]  # Excess losses
