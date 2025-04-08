@@ -27,7 +27,7 @@ def cvar_minlp(
     - max_assets: Maximum number of assets to include (default: all)
     
     Returns:
-    - optimized_weights: Numpy array of optimal portfolio weights
+    - optimized_weights: Dictionary with "weights" key containing numpy array of optimal portfolio weights
     """
     # Get adjusted close prices
     adj_close_df = get_adj_close_from_stocks(stocks, start_date, end_date)
@@ -36,11 +36,10 @@ def cvar_minlp(
             f"ERROR : Stocks {stocks} not found in given range \n \
             with start date : {start_date} \n and End date : {end_date} "
         )
-        return []
+        return {"weights": np.array([1/len(stocks) for _ in range(len(stocks))])}
     
     # Compute log returns
     log_returns = np.log(adj_close_df / adj_close_df.shift(1))
-    print(f"Log returns:\n{log_returns}")
     log_returns = log_returns.dropna()
     
     N = log_returns.shape[0]  # Number of scenarios (days)
@@ -52,7 +51,7 @@ def cvar_minlp(
     
     # Initialize Gekko Model
     m = GEKKO(remote=False)
-    m.options.SOLVER = 1  # IPOPT solver
+    m.options.SOLVER = 3  # Changed to BONMIN for better handling of integer variables
     
     # Decision Variables
     w = [m.Var(lb=bounds[i][0], ub=bounds[i][1]) for i in range(M)]  # Portfolio weights
@@ -80,12 +79,14 @@ def cvar_minlp(
     
     # Calculate portfolio returns for each scenario
     for i in range(N):
-        portfolio_return = m.sum([log_returns.iloc[i, j] * w[j] - risk_rate for j in range(M)])
+        # Calculate total portfolio return first, then subtract risk-free rate
+        portfolio_return = m.sum([log_returns.iloc[i, j] * w[j] for j in range(M)]) - risk_rate
         # CVaR constraint: excess loss beyond VaR threshold
         m.Equation(xi[i] >= -portfolio_return - var_threshold)
     
     # CVaR objective
-    cvar = var_threshold + (1 / ((1 - confidence_level) * N)) * m.sum(xi)
+    alpha = 1 - confidence_level  # Convert confidence level to alpha (e.g., 0.95 -> 0.05)
+    cvar = var_threshold + (1 / (alpha * N)) * m.sum(xi)
     
     # Minimize CVaR (maximize negative CVaR)
     m.Obj(cvar)
@@ -96,28 +97,30 @@ def cvar_minlp(
         
         # Extract optimized weights
         optimized_weights = np.array([w[i].value[0] for i in range(M)])
-        return optimized_weights
+        
+        return {"weights": optimized_weights}
         
     except Exception as e:
         print(f"Optimization error: {e}")
-        # Return equally weighted portfolio as fallback
-        return np.array([1/M] * M)
+        # Return equally weighted portfolio as fallback with correct structure
+        return {"weights": np.array([1/M for _ in range(M)])}
 
 def main():
     """
     Test function to demonstrate the CVaR MINLP implementation
     """
     # Example usage
-    stocks = ['TSLA','AAPL', 'MSFT', 'AMZN']
+    stocks = ['TSLA','AAPL', 'MSFT', 'AMZN', 'GOOGL', 'META', 'NFLX']
     start_date = '2023-04-01'
     end_date = '2024-03-31'
-    risk_rate = 0.25 # 5%
-    
+    risk_rate = 0.05 # 5%
+  
     # Define bounds (min and max weights)
     min_weights = [0.0] * len(stocks)
     max_weights = [1.0] * len(stocks)
     bounds = list(zip(min_weights, max_weights))
-    
+    print(f"Bounds: {bounds}")
+  
     # Run optimization
     optimized_weights = cvar_minlp(
         stocks, 
@@ -126,13 +129,13 @@ def main():
         bounds, 
         risk_rate, 
         confidence_level=0.95, 
-        max_assets=3  # Allow a maximum of 3 assets
+        max_assets=5  # Allow a maximum of 3 assets
     )
-    
+  
     # Print the results
     print("\nOptimized Portfolio Weights:")
-    for i, stock in enumerate(stocks):
-        print(f"{stock}: {optimized_weights[i]:.4f}")
+    for stock, weight in zip(stocks, optimized_weights["weights"]):
+        print(f"{stock}: {weight:.4f}")
 
 if __name__ == "__main__":
     main()
