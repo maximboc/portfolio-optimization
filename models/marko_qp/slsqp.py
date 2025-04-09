@@ -2,7 +2,7 @@ import yfinance as yf
 from datetime import datetime
 import pandas as pd
 import numpy as np
-from scipy.optimizels import minimize
+from scipy.optimize import minimize
 from utils.markovitz_utils import *
 from utils.finance_utils import get_adj_close_from_stocks
 import streamlit as st

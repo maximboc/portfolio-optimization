@@ -1,6 +1,5 @@
 import streamlit as st
 from pages.multiple_models import *
-from pages.single_model import *
 from pages.llm import *
 
 def hide_streamlit_style():
