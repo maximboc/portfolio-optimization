@@ -24,16 +24,12 @@ def main():
     page = st.sidebar.radio(
         "Select a Page",
         (
-            "Portfolio Optimization",
             "Multi-Model Portfolio Optimization",
             "Aziz - The Financial ChatBro",
         ),
     )
 
-    if page == "Portfolio Optimization":
-        page_single()
-
-    elif page == "Multi-Model Portfolio Optimization":
+    if page == "Multi-Model Portfolio Optimization":
         page_multi()
 
     elif page == "Aziz - The Financial ChatBro":

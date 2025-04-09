@@ -14,7 +14,6 @@ from utils.finance_utils import (
 )
 from .model_selector import select_model
 from utils.frontend_utils import (
-    plot_returns,
     search_stocks,
     models_dict,
 )
