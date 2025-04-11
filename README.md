@@ -68,3 +68,7 @@ We have also added a chatbot called Aziz, The Financial ChatBro, to answer finan
 
 3. **Access the Application**:
    - Open [http://0.0.0.0:8501/](http://0.0.0.0:8501/) in your browser to view the application.
+
+This is what you should get :
+
+https://github.com/user-attachments/assets/f25b887b-429c-4fbb-a0ba-1a7b83c7fea0
