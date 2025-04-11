@@ -71,4 +71,4 @@ We have also added a chatbot called Aziz, The Financial ChatBro, to answer finan
 
 This is what you should get :
 
-https://github.com/user-attachments/assets/f25b887b-429c-4fbb-a0ba-1a7b83c7fea0
+https://github.com/user-attachments/assets/c9f26eba-08a9-46ad-9b67-9b5a34380ed9
